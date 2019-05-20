@@ -5,8 +5,8 @@ C = dct_ii(N);
 Y = colxfm(colxfm(X,C)',C)';
 Yq = quantise(Y, opt);
 Zq = colxfm(colxfm(Yq',C')',C');
-while abs(std(X(:)- Zq(:)) - std(X(:)- Xq(:))) > 0.1
-    opt = opt + 0.1;
+while abs(std(X(:)- Zq(:)) - std(X(:)- Xq(:))) > 0.001
+    opt = opt + 0.01;
     Y = colxfm(colxfm(X,C)',C)';
     Yq = quantise(Y, opt);
     Zq = colxfm(colxfm(Yq',C')',C');
