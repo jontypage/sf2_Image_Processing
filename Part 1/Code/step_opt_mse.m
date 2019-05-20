@@ -17,10 +17,9 @@ for i = 1:1000
     end
     Z0q = nlevelquantisedpyramidmse(X, layers, h, step_set);
     if abs(std(X(:) - Z0q(:)) - std(X(:) - Xq(:)))<optimal
-        optimal = abs(std(X(:) - Z0q(:)) - std(X(:) - Xq(:)));
+        optimal= abs(std(X(:) - Z0q(:)) - std(X(:) - Xq(:)));
         opt_step = step_set;
     end
-    disp(abs(std(X(:) - Z0q(:)) - std(X(:) - Xq(:))));
 end
 
 step_opt = opt_step;

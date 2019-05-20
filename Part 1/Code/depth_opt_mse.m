@@ -1,7 +1,7 @@
 function [opt, bits] = depth_opt_mse(X, h)
 X_orig = X;
 [m, ~] = size(X);
-for j = 1:(log2(m)-2)
+for j = 1:(log2(m)-1)
     Y = {};
     X = X_orig;
     opt_step = step_opt_mse(X, h, j, 17);
@@ -20,6 +20,7 @@ for j = 1:(log2(m)-2)
         [a, ~] = size(Yq{1, i});
         sum = sum + bpp(Yq{1, i})*(a^2);
     end
+    disp(sum)
     if j == 1
         bits = sum;
         opt = 1;

@@ -22,4 +22,4 @@ ratios = [];
 for i = 1:(levels-1)
     ratios = [ratios, sqrt(E(i)/E(i+1))];
 end
-return        
+return 
