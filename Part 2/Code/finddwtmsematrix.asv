@@ -1,3 +1,0 @@
-function matrix = finddwtmsematrix(N)
-X = zeros(256, 256);
-Y = nleveldwt(X, N)
