@@ -1,7 +1,8 @@
-function [vlc, all_params] = optimise_dct_params(X)
+function [vlc, all_params] = optimise_lbt_params(X)
 Xq = quantise(X, 17);
 rms_diff_opt = 100000000;
-possible_dims = [8, 16, 32];
+s = 1.4;
+possible_dims = [4, 8, 16];
 all_params = [];
 for i = 1:length(possible_dims)
     bits = 45001;
@@ -12,7 +13,8 @@ for i = 1:length(possible_dims)
         dcbits_not_okay = true;
         while dcbits_not_okay
             try
-                vlc = jpegenc(X, step, possible_dims(i), possible_dims(i), false, dcbits);
+                disp(dcbits)
+                vlc = jpegenc_lbt(X, step, possible_dims(i), s, false, dcbits);
                 dcbits_not_okay = false;
             catch
                 dcbits = dcbits + 1;
@@ -28,7 +30,7 @@ for i = 1:length(possible_dims)
         dcbits_not_okay = true;
         while dcbits_not_okay
             try
-                vlc = jpegenc(X, step, possible_dims(i), possible_dims(i), false, dcbits);
+                vlc = jpegenc_lbt(X, step, possible_dims(i), s, false, dcbits);
                 dcbits_not_okay = false;
             catch
                 dcbits = dcbits + 1;
@@ -38,8 +40,8 @@ for i = 1:length(possible_dims)
         disp(step)
         disp(bits)
     end
-    vlc = jpegenc(X, step, possible_dims(i), possible_dims(i), false, dcbits);
-    X_dec = jpegdec(vlc, step, possible_dims(i), possible_dims(i), dcbits);
+    vlc = jpegenc_lbt(X, step, possible_dims(i), s, false, dcbits);
+    X_dec = jpegdec_lbt(vlc, step, possible_dims(i), s, dcbits);
     figure(i)
     draw(X_dec)
     rms_diff = abs(std(X(:)- X_dec(:)) - std(X(:)- Xq(:)));
@@ -52,5 +54,5 @@ for i = 1:length(possible_dims)
         opt_dcbits = dcbits;
     end
 end
-vlc = jpegenc(X, opt_step, N, N, false, opt_dcbits);
+vlc = jpegenc_lbt(X, opt_step, N, s, false, opt_dcbits);
 return

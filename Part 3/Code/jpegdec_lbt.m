@@ -1,4 +1,4 @@
-function Z = jpegdec(vlc, qstep, N, M, dcbits, bits, huffval, W, H)
+function Z = jpegdec_lbt(vlc, qstep, N, s, dcbits, bits, huffval, W, H)
 
 % JPEGDEC Decodes a (simplified) JPEG bit stream to an image
 %
@@ -18,6 +18,7 @@ function Z = jpegdec(vlc, qstep, N, M, dcbits, bits, huffval, W, H)
 %  W and H determine the size of the image (defaults to 256 x 256)
 %
 %  Z is the output greyscale image
+M=16;
 
 % Presume some default values if they have not been provided
 error(nargchk(2, 9, nargin, 'struct'));
@@ -127,7 +128,6 @@ fprintf(1, 'Inverse quantising to step size of %i\n', qstep);
 Zi=quant2(Zq,qstep,qstep);
 
 fprintf(1, 'Inverse %i x %i DCT\n', N, N);
-C8=dct_ii(N);
-Z=colxfm(colxfm(Zi',C8')',C8');
+Z = lbt_r(Zi, N, s);
 
 return

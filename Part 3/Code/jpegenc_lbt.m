@@ -1,11 +1,11 @@
-function [vlc bits huffval] = jpegenc_dct(X, opthuff, dcbits)
+function [vlc bits huffval] = jpegenc_lbt(X, qstep, N, s, opthuff, dcbits)
     
 % JPEGENC Encode an image to a (simplified) JPEG bit stream
 %
 %  [vlc bits huffval] = jpegenc(X, qstep, N, M, opthuff, dcbits) Encodes the
 %  image in X to generate the variable length bit stream in vlc.
 %
-%  X is the input greyscale image
+%  X is the input greyscale imageC8=dct_ii(N);
 %  qstep is the quantisation step to use in encoding
 %  N is the width of the DCT block (defaults to 8)
 %  M is the width of each block to be coded (defaults to N). Must be an
@@ -22,27 +22,25 @@ function [vlc bits huffval] = jpegenc_dct(X, opthuff, dcbits)
 %  bits and huffval are optional outputs which return the Huffman encoding
 %  used in compression
 
+M=16;
+
 % This is global to avoid too much copying when updated by huffenc
 global huffhist  % Histogram of usage of Huffman codewords.
-[qstep, N, all_params] = optimise_dct_params(X);
-disp(all_params)
-M = N;
 
 % Presume some default values if they have not been provided
-%error(nargchk(2, 6, nargin, 'struct'));
+error(nargchk(2, 6, nargin, 'struct'));
 if ((nargout~=1) && (nargout~=3)) error('Must have one or three output arguments'); end
-if (nargin<3)
+if (nargin<6)
   dcbits = 8;
-  if (nargin<2)
+  if (nargin<5)
     opthuff = false;
   end
 end
-if ((opthuff==true) && (nargout==1)) error('Must output bits and huffval if optimising huffman tables'); end
+ if ((opthuff==true) && (nargout==1)) error('Must output bits and huffval if optimising huffman tables'); end
  
-% DCT on input image X.
-fprintf(1, 'Forward %i x %i DCT\n', N, N);
-C8=dct_ii(N);
-Y=colxfm(colxfm(X,C8)',C8)'; 
+% LBT on input image X and quantise.
+fprintf(1, 'Forward %i x %i LBT\n', N, N);
+Y = lbt_f(X, N, s);
 
 % Quantise to integers.
 fprintf(1, 'Quantising to step size of %i\n', qstep); 

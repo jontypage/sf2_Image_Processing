@@ -1,4 +1,4 @@
-function Yq = lbt_f(X, N, s, step)
+function Y = lbt_f(X, N, s)
 [m, ~] = size(X);
 [Pf, ~] = pot_ii(N, s);
 C = dct_ii(N);
@@ -7,4 +7,3 @@ Xp = X;
 Xp(t,:) = colxfm(Xp(t,:), Pf );
 Xp(:,t) = colxfm(Xp(:,t)', Pf )';
 Y = colxfm(colxfm(Xp,C)',C)';
-Yq = quantise(Y, step);
