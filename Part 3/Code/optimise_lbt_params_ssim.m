@@ -1,4 +1,4 @@
-function [vlc, all_params] = optimise_lbt_params(X)
+function [vlc, all_params] = optimise_lbt_params_ssim(X)
 rms_error_opt = 100000000;
 possible_dims = [8, 16];
 possible_m = [8, 16];
@@ -62,7 +62,8 @@ for i = 1:length(possible_dims)
             end
             vlc = jpegenc_lbt(X, step, possible_dims(i), possible_m(m), s, false, dcbits);
             X_dec = jpegdec_lbt(vlc, step, possible_dims(i), possible_m(m), s, dcbits);
-            rms_error = std(X(:)- X_dec(:));
+            rms_error = ssim(X_dec, X);
+            %rms_error = std(X(:)- X_dec(:));
             all_params = [all_params; [possible_dims(i), step, dcbits, s, possible_m(m), rms_error]];
             disp(rms_error)
             if rms_error < rms_error_opt

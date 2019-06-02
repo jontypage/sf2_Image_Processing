@@ -1,4 +1,4 @@
-function [vlc bits huffval] = jpegenc_lbt(X, qstep, N, s, opthuff, dcbits)
+function [vlc bits huffval] = jpegenc_lbt(X, qstep, N, M, s, opthuff, dcbits)
     
 % JPEGENC Encode an image to a (simplified) JPEG bit stream
 %
@@ -22,17 +22,15 @@ function [vlc bits huffval] = jpegenc_lbt(X, qstep, N, s, opthuff, dcbits)
 %  bits and huffval are optional outputs which return the Huffman encoding
 %  used in compression
 
-M=16;
-
 % This is global to avoid too much copying when updated by huffenc
 global huffhist  % Histogram of usage of Huffman codewords.
 
 % Presume some default values if they have not been provided
-error(nargchk(2, 6, nargin, 'struct'));
+error(nargchk(2, 7, nargin, 'struct'));
 if ((nargout~=1) && (nargout~=3)) error('Must have one or three output arguments'); end
-if (nargin<6)
+if (nargin<7)
   dcbits = 8;
-  if (nargin<5)
+  if (nargin<6)
     opthuff = false;
   end
 end

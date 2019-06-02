@@ -1,6 +1,5 @@
 function [vlc, all_params] = optimise_dct_params(X)
-Xq = quantise(X, 17);
-rms_diff_opt = 100000000;
+rms_error_opt = 100000000;
 possible_dims = [8, 16, 32];
 all_params = [];
 for i = 1:length(possible_dims)
@@ -58,11 +57,11 @@ for i = 1:length(possible_dims)
     X_dec = jpegdec(vlc, step, possible_dims(i), possible_dims(i), dcbits);
     figure(i)
     draw(X_dec)
-    rms_diff = abs(std(X(:)- X_dec(:)) - std(X(:)- Xq(:)));
-    all_params = [all_params; [possible_dims(i), step, dcbits, rms_diff]];
-    disp(rms_diff)
-    if rms_diff < rms_diff_opt
-        rms_diff_opt = rms_diff;
+    rms_error = std(X(:)- X_dec(:));
+    all_params = [all_params; [possible_dims(i), step, dcbits, rms_error]];
+    disp(rms_error)
+    if rms_error < rms_error_opt
+        rms_error_opt = rms_error;
         opt_step = step;
         N = possible_dims(i);
         opt_dcbits = dcbits;

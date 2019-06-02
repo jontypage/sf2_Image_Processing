@@ -1,8 +1,11 @@
-function [vlc, all_params] = optimise_dwt_params(X)
+function [vlc, all_params] = image_compression(X)
 rms_error_opt = 100000000;
-possible_levels = [3, 4, 5, 6, 7];
+dim = 8;
+M = 8;
 all_params = [];
-for i = 1:length(possible_levels)
+for j = 1:10
+    s = 1.15 + ((j-1)/20);
+    disp(s)
     bits = 45001;
     step = 0;
     while bits > 45000
@@ -11,7 +14,8 @@ for i = 1:length(possible_levels)
         dcbits_not_okay = true;
         while dcbits_not_okay
             try
-                vlc = jpegenc_dwt(X, step, possible_levels(i), false, dcbits);
+                disp(dcbits)
+                vlc = jpegenc_lbt(X, step, dim, M, s, false, dcbits);
                 dcbits_not_okay = false;
             catch
                 dcbits = dcbits + 1;
@@ -27,7 +31,8 @@ for i = 1:length(possible_levels)
         dcbits_not_okay = true;
         while dcbits_not_okay
             try
-                vlc = jpegenc_dwt(X, step, possible_levels(i), false, dcbits);
+                disp(dcbits)
+                vlc = jpegenc_lbt(X, step, dim, M, s, false, dcbits);
                 dcbits_not_okay = false;
             catch
                 dcbits = dcbits + 1;
@@ -43,7 +48,7 @@ for i = 1:length(possible_levels)
         dcbits_not_okay = true;
         while dcbits_not_okay
             try
-                vlc = jpegenc_dwt(X, step, possible_levels(i), false, dcbits);
+                vlc = jpegenc_lbt(X, step, dim, M, s, false, dcbits);
                 dcbits_not_okay = false;
             catch
                 dcbits = dcbits + 1;
@@ -53,19 +58,21 @@ for i = 1:length(possible_levels)
         disp(step)
         disp(bits)
     end
-    vlc = jpegenc_dwt(X, step, possible_levels(i), false, dcbits);
-    X_dec = jpegdec_dwt(vlc, step, possible_levels(i), dcbits);
+    vlc = jpegenc_lbt(X, step, possible_dims(i), possible_m(m), s, false, dcbits);
+    X_dec = jpegdec_lbt(vlc, step, possible_dims(i), possible_m(m), s, dcbits);
     rms_error = std(X(:)- X_dec(:));
-    all_params = [all_params; [possible_levels(i), step, dcbits, rms_error]];
+    all_params = [all_params; [possible_dims(i), step, dcbits, s, possible_m(m), rms_error]];
     disp(rms_error)
     if rms_error < rms_error_opt
         rms_error_opt = rms_error;
         opt_step = step;
-        N = possible_levels(i);
+        N = possible_dims(i);
+        M = possible_m(m);
         opt_dcbits = dcbits;
+        opt_s = s;
         figure(i)
         draw(X_dec);
     end
 end
-vlc = jpegenc_dwt(X, opt_step, N, false, opt_dcbits);
+vlc = jpegenc_lbt(X, opt_step, N, M, opt_s, false, opt_dcbits);
 return

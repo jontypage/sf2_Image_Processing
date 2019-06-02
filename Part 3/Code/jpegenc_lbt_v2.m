@@ -1,11 +1,11 @@
-function [vlc bits huffval] = jpegenc(X, qstep, N, M, opthuff, dcbits)
+function [vlc bits huffval] = jpegenc_lbt_v2(X, qstep, N, M, s, opthuff, dcbits)
     
 % JPEGENC Encode an image to a (simplified) JPEG bit stream
 %
 %  [vlc bits huffval] = jpegenc(X, qstep, N, M, opthuff, dcbits) Encodes the
 %  image in X to generate the variable length bit stream in vlc.
 %
-%  X is the input greyscale image
+%  X is the input greyscale imageC8=dct_ii(N);
 %  qstep is the quantisation step to use in encoding
 %  N is the width of the DCT block (defaults to 8)
 %  M is the width of each block to be coded (defaults to N). Must be an
@@ -26,35 +26,40 @@ function [vlc bits huffval] = jpegenc(X, qstep, N, M, opthuff, dcbits)
 global huffhist  % Histogram of usage of Huffman codewords.
 
 % Presume some default values if they have not been provided
-error(nargchk(2, 6, nargin, 'struct'));
+error(nargchk(2, 7, nargin, 'struct'));
 if ((nargout~=1) && (nargout~=3)) error('Must have one or three output arguments'); end
-if (nargin<6)
+if (nargin<7)
   dcbits = 8;
-  if (nargin<5)
+  if (nargin<6)
     opthuff = false;
-    if (nargin<4)
-      if (nargin<3)
-        N = 8;
-        M = 8;
-      else
-        M = N;
-      end
-    else 
-      if (mod(M, N)~=0) error('M must be an integer multiple of N'); end
-    end
   end
 end
  if ((opthuff==true) && (nargout==1)) error('Must output bits and huffval if optimising huffman tables'); end
  
-% DCT on input image X.
-fprintf(1, 'Forward %i x %i DCT\n', N, N);
-C8=dct_ii(N);
-Y=colxfm(colxfm(X,C8)',C8)'; 
+% LBT on input image X and quantise.
+fprintf(1, 'Forward %i x %i LBT\n', N, N);
+Y = lbt_f(X, N, s);
 
 % Quantise to integers.
-fprintf(1, 'Quantising to step size of %i\n', qstep); 
-Yq=quant1(Y,qstep,qstep);
-disp(Yq)
+fprintf(1, 'Quantising to step size of %i\n', qstep);
+
+q_mtx =     [16 11 10 16 24 40 51 61; 
+            12 12 14 19 26 58 60 55;
+            14 13 16 24 40 57 69 56; 
+            14 17 22 29 51 87 80 62;
+            18 22 37 56 68 109 103 77;
+            24 35 55 64 81 104 113 92;
+            49 64 78 87 103 121 120 101;
+            72 92 95 98 112 100 103 99];
+q_mtx = q_mtx*qstep;
+
+matrix = zeros(256, 256);
+for i = 1:32
+    for j = 1:32
+        matrix((i-1)*8+1:(i*8), (j-1)*8+1:(j*8)) = matrix((i-1)*8+1:(i*8), (j-1)*8+1:(j*8))+q_mtx;
+    end
+end
+Yq = round(Y./matrix);
 % Generate zig-zag scan of AC coefs.
 scan = diagscan(M);
 
@@ -74,7 +79,6 @@ for r=0:M:(sy(1)-M),
   vlc1 = [];
   for c=0:M:(sy(2)-M),
     yq = Yq(r+t,c+t);
-    disp(yq)
     % Possibly regroup 
     if (M > N) yq = regroup(yq, N); end
     % Encode DC coefficient first
