@@ -1,11 +1,11 @@
-function [vlc bits huffval] = jpegenc_lbt_v2(X, qstep, N, M, s, opthuff, dcbits)
+function [vlc bits huffval] = jpegenc_dct_v2(X, qstep, N, M, opthuff, dcbits)
     
 % JPEGENC Encode an image to a (simplified) JPEG bit stream
 %
 %  [vlc bits huffval] = jpegenc(X, qstep, N, M, opthuff, dcbits) Encodes the
 %  image in X to generate the variable length bit stream in vlc.
 %
-%  X is the input greyscale imageC8=dct_ii(N);
+%  X is the input greyscale image
 %  qstep is the quantisation step to use in encoding
 %  N is the width of the DCT block (defaults to 8)
 %  M is the width of each block to be coded (defaults to N). Must be an
@@ -26,22 +26,33 @@ function [vlc bits huffval] = jpegenc_lbt_v2(X, qstep, N, M, s, opthuff, dcbits)
 global huffhist  % Histogram of usage of Huffman codewords.
 
 % Presume some default values if they have not been provided
-error(nargchk(2, 7, nargin, 'struct'));
+error(nargchk(2, 6, nargin, 'struct'));
 if ((nargout~=1) && (nargout~=3)) error('Must have one or three output arguments'); end
-if (nargin<7)
+if (nargin<6)
   dcbits = 8;
-  if (nargin<6)
+  if (nargin<5)
     opthuff = false;
+    if (nargin<4)
+      if (nargin<3)
+        N = 8;
+        M = 8;
+      else
+        M = N;
+      end
+    else 
+      if (mod(M, N)~=0) error('M must be an integer multiple of N'); end
+    end
   end
 end
  if ((opthuff==true) && (nargout==1)) error('Must output bits and huffval if optimising huffman tables'); end
  
-% LBT on input image X and quantise.
-fprintf(1, 'Forward %i x %i LBT\n', N, N);
-Y = lbt_f(X, N, s);
+% DCT on input image X.
+fprintf(1, 'Forward %i x %i DCT\n', N, N);
+C8=dct_ii(N);
+Y=colxfm(colxfm(X,C8)',C8)'; 
 
 % Quantise to integers.
-fprintf(1, 'Quantising to step size of %i\n', qstep);
+fprintf(1, 'Quantising to step size of %i\n', qstep); 
 
 q_mtx =     [16 11 10 16 24 40 51 61; 
             12 12 14 19 26 58 60 55;
@@ -52,23 +63,15 @@ q_mtx =     [16 11 10 16 24 40 51 61;
             49 64 78 87 103 121 120 101;
             72 92 95 98 112 100 103 99];
 q_mtx = q_mtx*qstep;
-Yr = regroup(Y, N)/N;
-Yq = zeros(size(Yr));
-for i = 1:8
-    for j = 1:8
-        Yq((i-1)*32+1:(i*32), (j-1)*32+1:(j*32)) = quant1(Yr((i-1)*32+1:(i*32), (j-1)*32+1:(j*32)), q_mtx(i, j));
+
+matrix = zeros(256, 256);
+for i = 1:32
+    for j = 1:32
+        matrix((i-1)*8+1:(i*8), (j-1)*8+1:(j*8)) = matrix((i-1)*8+1:(i*8), (j-1)*8+1:(j*8))+q_mtx;
     end
 end
-draw(Yq)
+Yq = round(Y./matrix);
 
-
-%matrix = zeros(256, 256);
-%for i = 1:32
-%    for j = 1:32
-%        matrix((i-1)*8+1:(i*8), (j-1)*8+1:(j*8)) = matrix((i-1)*8+1:(i*8), (j-1)*8+1:(j*8))+q_mtx;
-%    end
-%end
-%Yq = max(0, ceil(abs(Y)./matrix)).*sign(Y);
 % Generate zig-zag scan of AC coefs.
 scan = diagscan(M);
 
