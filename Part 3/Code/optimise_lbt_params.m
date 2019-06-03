@@ -44,7 +44,7 @@ for i = 1:length(possible_dims)
                 disp(step)
                 disp(bits)
             end
-            while bits > 39536
+            while bits > 39516
                 step = step + 0.01;
                 dcbits = 8;
                 dcbits_not_okay = true;
